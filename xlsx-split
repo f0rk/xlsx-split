@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+import argparse
+import os.path
+
+import openpyxl
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--file", help="path to xlsx file to split", required=True)
+parser.add_argument(
+    "--size",
+    help="number of records per file",
+    required=True,
+    type=int,
+)
+
+args = parser.parse_args()
+
+with open(args.file, "rb") as fp:
+    workbook = openpyxl.load_workbook(fp, read_only=True, data_only=True)
+
+    headers = None
+
+    row_count = 0
+    split_index = 0
+
+    output_fp = None
+    output_workbook = None
+    output_worksheet = None
+
+    for row in workbook.active.rows:
+        values = [c.value for c in row]
+
+        if headers is None:
+            headers = values
+            continue
+
+        if row_count % args.size == 0:
+
+            if output_fp is not None:
+                output_workbook.save(output_fp)
+                output_fp.close()
+
+                output_worksheet = None
+                output_workbook = None
+
+            output_name, output_extension = os.path.splitext(args.file)
+            output_name_for_split = (
+                output_name
+                + "."
+                + str(split_index).zfill(3)
+                + output_extension
+            )
+
+            output_fp = open(output_name_for_split, "wb+")
+
+            output_workbook = openpyxl.Workbook(write_only=True)
+            output_worksheet = output_workbook.create_sheet(workbook.active.title)
+
+            output_worksheet.append(headers)
+
+            split_index += 1
+
+        output_worksheet.append(values)
+
+        row_count += 1
+
+if output_fp is not None:
+    output_workbook.save(output_fp)
+    output_fp.close()
+
+    output_worksheet = None
+    output_workbook = None

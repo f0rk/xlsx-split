@@ -1,0 +1,11 @@
+Split an XLSX file into multiple files, preserving headers.
+
+Call xlsx-split with -h for help.
+
+Requires python and openpxyl.
+
+Examples:
+
+~$ xlsx-split --file /tmp/a.xlsx --size 1
+~$ ls /tmp/a.*
+/tmp/a.000.xlsx  /tmp/a.001.xlsx  /tmp/a.002.xlsx  /tmp/a.xlsx
